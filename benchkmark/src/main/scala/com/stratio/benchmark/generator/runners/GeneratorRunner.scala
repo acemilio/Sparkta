@@ -64,6 +64,7 @@ object GeneratorRunner {
 }
 
 class StoppedThreads(var numberOfThreads: Int, var numberOfEvents: BigInt) {
+
   def incrementNumberOfThreads: Unit = {
     this.synchronized(numberOfThreads = numberOfThreads + 1)
   }

@@ -36,6 +36,7 @@ class GeneratorThread(producer: Producer[String,String], timeout: Long, stoppedT
   override def run: Unit = {
     generateRaw(new Date().getTime)
     producer.close()
+
     stoppedThreads.incrementNumberOfEvents(numberOfEvents)
     stoppedThreads.incrementNumberOfThreads
   }
