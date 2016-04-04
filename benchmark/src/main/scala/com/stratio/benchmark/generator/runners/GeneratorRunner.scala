@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.stratio.benchmark.generator.runners
 
 import java.io.File
 import java.util.UUID
 
 import com.stratio.benchmark.generator.constants.BenchmarkConstants
-import com.stratio.benchmark.generator.models.{AvgStatisticalModel, StatisticalElementModel}
+import com.stratio.benchmark.generator.models._
 import com.stratio.benchmark.generator.threads.GeneratorThread
 import com.stratio.benchmark.generator.utils.HttpUtil
 import com.stratio.kafka.benchmark.generator.kafka.KafkaProducer
@@ -27,11 +28,12 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
 import org.json4s.native.Serialization.{read, writePretty}
-
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 import org.json4s.DefaultFormats
+
+import com.stratio.models.benchmark.generator.models.DefaultRawModel
 
 object GeneratorRunner extends HttpUtil {
 
@@ -44,7 +46,6 @@ object GeneratorRunner extends HttpUtil {
    * @param args where you must pass the path of the config file.
    */
   def main(args: Array[String]) {
-
 
     if (args.size == 0) {
       logger.info("Use: java -jar benchmark.jar <config file>")
@@ -74,11 +75,11 @@ object GeneratorRunner extends HttpUtil {
     val sparkMetricsFile = new File(sparkMetricsPath)
     val resultMetricsFile = new File(resultMetricsPath)
 
-    if(!sparkMetricsFile.exists()) {
+    if (!sparkMetricsFile.exists()) {
       sparkMetricsFile.mkdir()
     }
 
-    if(!resultMetricsFile.exists()) {
+    if (!resultMetricsFile.exists()) {
       resultMetricsFile.mkdir()
     }
 
@@ -136,20 +137,28 @@ object GeneratorRunner extends HttpUtil {
 
     (1 to numberOfThreads).foreach(i =>
       new Thread(
-        new GeneratorThread(KafkaProducer.getInstance(config), threadTimeout, stoppedThreads, kafkaTopic)).start()
+        new GeneratorThread(
+          KafkaProducer.getInstance(config),
+          threadTimeout,
+          stoppedThreads,
+          kafkaTopic,
+          config))
+        .start()
     )
 
-    while(stoppedThreads.numberOfThreads == numberOfThreads) {
+    while (stoppedThreads.numberOfThreads == numberOfThreads) {
       Thread.sleep(BenchmarkConstants.PoolingManagerGeneratorActorTimeout)
     }
 
     logger.info(s"   Step 3/6 Event generator finished. Number of generated events: ${stoppedThreads.numberOfEvents}")
   }
 
+
+
   /**
    * It generates two reports:
    * [timestamp]-fullReports.json: a report that contains information per executed spark's batch.
-   * averageReport.json: a report that contains global averages of the previous report.
+   * averageReport-fiveNestedObjects.json: a report that contains global averages of the previous report.
    * @param config with the needed parameters.
    */
   def generateReports(config: Config): Unit = {
@@ -167,9 +176,9 @@ object GeneratorRunner extends HttpUtil {
     logger.info(s"   Step 5/6 Generating full report: ${fileFullReport.getAbsolutePath}")
     FileUtils.writeStringToFile((fileFullReport), writePretty(statisticalElementModels))
 
-    val fileAverageReport = new File(s"$resultMetricsPath/averageReport.json")
+    val fileAverageReport = new File(s"$resultMetricsPath/averageReport-fiveNestedObjects.json")
 
-    val avgStatisticalModels  = if(fileAverageReport.exists) {
+    val avgStatisticalModels = if (fileAverageReport.exists) {
       (read[Seq[AvgStatisticalModel]](Source.fromFile(fileAverageReport).mkString)) :+ avgStatisticalModel
     } else {
       Seq(avgStatisticalModel)
@@ -211,6 +220,6 @@ class StoppedThreads(var numberOfThreads: Int, var numberOfEvents: BigInt) {
   }
 
   def incrementNumberOfEvents(offset: BigInt): Unit = {
-    this.synchronized(numberOfEvents= numberOfEvents + offset)
+    this.synchronized(numberOfEvents = numberOfEvents + offset)
   }
 }

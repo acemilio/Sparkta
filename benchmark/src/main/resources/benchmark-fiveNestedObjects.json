@@ -1,5 +1,5 @@
 {
-  "name": "benchmark",
+  "name": "benchmark-fiveNestedObjects",
   "description": "No description",
   "sparkStreamingWindow": 2000,
   "checkpointPath": "/tmp/checkpoint",
@@ -13,7 +13,7 @@
     "name": "in-kafka",
     "type": "Kafka",
     "configuration": {
-      "topics": [{"topic": "benchmark", "partition" : "1"}],
+      "topics": [{"topic": "benchmark-fiveNestedObjects", "partition" : "1"}],
       "zookeeper.connect": [{"host": "zk.demo.stratio.com", "port": "2181"}],
       "kafkaParams.group.id": "KafkaCluster"
     }
@@ -28,12 +28,11 @@
         {"name":"orderId"},
         {"name":"timestamp"},
         {"name":"clientId"},
-        {"name":"latitude"},
-        {"name":"longitude"},
-        {"name":"paymentMethod"},
-        {"name":"creditCard"},
-        {"name":"shoppingCenter"},
-        {"name":"employee"}
+        {"name":"city"},
+        {"name":"country"},
+        {"name":"continent"},
+        {"name":"planet"},
+        {"name":"galaxy"}
       ],
       "configuration": {
         "morphline": {
@@ -51,12 +50,11 @@
                   "orderId": "/order_id",
                   "timestamp": "/timestamp",
                   "clientId": "/client_id",
-                  "latitude": "/latitude",
-                  "longitude": "/longitude",
-                  "paymentMethod": "/payment_method",
-                  "creditCard": "/credit_card",
-                  "shoppingCenter": "/shopping_center",
-                  "employee": "/employee"
+                  "city": "/city/name",
+                  "country": "/city/country/name",
+                  "continent": "/city/country/continent/name",
+                  "planet": "/city/country/continent/planet/name",
+                  "galaxy": "/city/country/continent/planet/galaxy/name"
                 }
               }
             }
@@ -84,12 +82,24 @@
       },
       "dimensions": [
         {
-          "name": "payment_method",
-          "field": "paymentMethod"
+          "name": "city",
+          "field": "city"
         },
         {
-          "name": "shopping_center",
-          "field": "shoppingCenter"
+          "name": "country",
+          "field": "country"
+        },
+        {
+          "name": "continent",
+          "field": "continent"
+        },
+        {
+          "name": "planet",
+          "field": "planet"
+        },
+        {
+          "name": "galaxy",
+          "field": "galaxy"
         },
         {
           "name": "minute",
